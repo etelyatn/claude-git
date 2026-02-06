@@ -1,0 +1,13 @@
+{
+  "name": "local",
+  "owner": {
+    "name": "Local Plugins"
+  },
+  "plugins": [
+    {
+      "name": "git",
+      "source": "./plugins/git-commands",
+      "description": "Git commands with configurable model (Haiku for speed, Sonnet for PRs)"
+    }
+  ]
+}
