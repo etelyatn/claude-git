@@ -51,3 +51,10 @@ After executing these commands, you will:
 - Provide feedback on which worktrees and branches were removed
 
 If no branches are marked as [gone], report that no cleanup was needed.
+
+## Important: Bash syntax requirements
+
+When executing git commands in bash, use correct bash syntax:
+- Use `cd /path/to/repo` with forward slashes (NOT `cd /d D:\path` - the `/d` flag is Windows cmd syntax)
+- For Windows paths in Git Bash, use forward slashes: `cd D:/path` works fine
+- Never use Windows cmd-specific flags or syntax
