@@ -1,7 +1,7 @@
 {
   "name": "git",
-  "version": "1.0.0",
-  "description": "Git commands with configurable model (currently Haiku for speed)",
+  "version": "1.1.0",
+  "description": "Git commands — commit, push, PR, merge, sync, update",
   "author": {
     "name": "Local Override"
   }

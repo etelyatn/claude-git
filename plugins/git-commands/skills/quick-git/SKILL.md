@@ -1,98 +1,80 @@
 ---
 name: quick-git
-description: Use when user wants to commit, push, merge, sync, update, open a PR, save work, or run quick git operations without extended discussion
+description: Use when user wants to commit, push, merge branches, merge PRs, open a PR, sync, update, or do any quick git operation in natural language
 ---
 
 # Quick Git
 
-Detects git intent and dispatches a haiku sub-agent for execution. Never do git work directly — always delegate.
+Detect intent from natural language and dispatch a **haiku** sub-agent. Never run git commands directly.
 
 ## Intent Detection
 
-| User says | Operation | Model |
-|-----------|-----------|-------|
-| "commit", "save my work", "just commit", "commit this" | commit | haiku |
-| "push", "just push", "push it", "push my changes" | push | haiku |
-| "commit and push", "save and push", "commit push" | commit+push | haiku |
-| "merge", "merge branches", "merge into main", "merge all" | merge | haiku |
-| "open a PR", "create a PR", "make a PR", "open PR" | pr | sonnet |
-| "push and PR", "push then PR", "push + PR" | push+pr | sonnet |
-| "commit push PR", "commit and push and PR", "full PR" | commit+push+pr | sonnet |
-| "sync", "check sync", "are we up to date", "what's new" | sync | haiku |
-| "update", "update from main", "pull main", "rebase on main", "get latest" | update | haiku |
+| Intent | Example phrases | Operation |
+|--------|----------------|-----------|
+| Commit | "commit this", "save my work", "just commit" | commit |
+| Push | "push it", "push my changes", "just push" | push |
+| Commit + push | "commit and push", "save and push" | commit+push |
+| Open PR | "open a PR", "create a PR", "make a PR" | pr |
+| Push + PR | "push and open a PR", "push then PR" | push+pr |
+| Commit + push + PR | "full PR", "commit push and PR", "ship it" | commit+push+pr |
+| Merge branches | "merge into main", "merge all branches", "merge feature-x" | merge |
+| Merge PRs | "merge the PR", "merge PR #42", "merge all open PRs" | merge-pr |
+| Sync | "are we up to date?", "check sync", "what's new on main" | sync |
+| Update | "update from main", "get latest", "rebase on main", "pull main" | update |
 
-## Execution — ALWAYS dispatch a sub-agent
+## Execution
 
-PR operations need quality titles/descriptions → use **sonnet**.
-All other git operations → use **haiku**.
+Gather context in parallel first, then dispatch a haiku Task:
 
-Gather context in parallel first:
-- `git status`
-- `git branch -a`
-- `git log --oneline -5`
-
-Then dispatch:
 ```
 Task(
   subagent_type: "general-purpose",
-  model: "haiku" | "sonnet",   ← per table above
-  prompt: "Git operation: <detected operation>
-User request: <exact words>
+  model: "haiku",
+  prompt: "Git operation: <operation>
+User said: <exact words>
 Context:
-- Status: <git status output>
-- Branches: <git branch -a output>
-- Log: <git log --oneline -5 output>
+  Status: <git status>
+  Branches: <git branch -a>
+  Log: <git log --oneline -5>
 
-<operation instructions below>"
+<instructions from section below>"
 )
 ```
 
-## Operation Instructions (include in Task prompt)
+## Operation Instructions
 
 ### commit
-1. Stage specific relevant files (not blind `git add .`)
-2. Commit message matching recent project style
+Stage specific files (not `git add .`), commit matching recent project style.
 
 ### push
-Push current branch; add `-u origin <branch>` if no upstream set.
+Push current branch; `-u origin <branch>` if no upstream.
 
 ### commit+push
-Commit then push sequentially.
-
-### merge
-1. If "merge all": merge each feature branch into main one by one (checkout main first)
-2. If specific branch named: merge into current branch
-3. Stop on conflicts — report conflicting files, do not auto-resolve
+Commit then push.
 
 ### pr
-1. Check if PR already exists for this branch — if so, report URL and stop
-2. Write concise title (<70 chars) from commits
-3. Write body with summary bullets + test plan checklist
-4. Run `gh pr create --title "..." --body "..."`
-5. Report PR URL
+Check for existing PR — if found, report URL and stop. If unpushed commits exist, report and stop. Otherwise create PR: title <70 chars, body with summary + test plan.
 
 ### push+pr
-Push first (`-u origin <branch>` if needed), then follow pr steps above.
+Push, then create PR as above.
 
 ### commit+push+pr
-Commit, push, then follow pr steps above — all sequentially.
+Commit, push, then create PR. Branch off main if currently on main.
+
+### merge (branches)
+Specific branch → merge into current. "into main" → checkout main first. "all" → merge each feature branch into main one by one. Stop and report on conflict.
+
+### merge-pr (GitHub PRs)
+By number/branch → merge that PR. "current" or no arg → merge PR for current branch. "all" → merge all open PRs. Default `--merge`; honor `--squash` or `--rebase` if asked.
 
 ### sync
-Read-only. Run in parallel:
-1. `git fetch origin` (no apply)
-2. `git status -sb` — ahead/behind remote
-3. `git rev-list --left-right --count main...HEAD` — ahead/behind main
-4. `git rev-list --left-right --count origin/main...main` — is main itself stale?
-5. `git stash list` — any stashes?
-Report status and suggested action. Make no changes.
+Read-only — run in parallel: `git status -sb`, ahead/behind main, is main itself stale, stash list. Report status and suggested fix. No changes.
 
 ### update
-1. `git fetch origin`
-2. If on main/master: `git pull`
-3. If on feature branch: `git rebase origin/main` (abort + report on conflict)
-4. Report commits pulled/rebased or "Already up to date"
+`git fetch origin`, then pull (on main) or `git rebase origin/main` (on feature branch). Abort and report on conflict.
 
 ## Rules
+- Haiku for everything
 - Never create a PR unless explicitly asked
-- Report only what was done — no extra commentary
-- On conflict during merge: report details and stop
+- On conflict: report and stop, never auto-resolve
+- Concise output only
