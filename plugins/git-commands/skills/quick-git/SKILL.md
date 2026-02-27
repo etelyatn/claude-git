@@ -15,8 +15,7 @@ Detect intent from natural language and dispatch a **haiku** sub-agent. Never ru
 | Push | "push it", "push my changes", "just push" | push |
 | Commit + push | "commit and push", "save and push" | commit+push |
 | PR (any stage) | "open a PR", "make a PR", "push and PR", "ship it", "full PR" | commit+push+pr |
-| Merge branches | "merge into main", "merge all branches", "merge feature-x" | merge |
-| Merge PRs | "merge the PR", "merge PR #42", "merge all open PRs" | merge-pr |
+| Merge | "merge feature-x", "merge PR #42", "merge into main", "merge all" | merge |
 | Sync | "are we up to date?", "check sync", "what's new on main" | sync |
 | Update | "update from main", "get latest", "rebase on main", "pull main" | update |
 
@@ -53,11 +52,11 @@ Commit then push.
 ### commit+push+pr
 Smart PR: check for existing PR first — if found, report URL and stop. Then commit if there are uncommitted changes, push if there are unpushed commits, open PR. Branch off main if currently on main.
 
-### merge (branches)
-Specific branch → merge into current. "into main" → checkout main first. "all" → merge each feature branch into main one by one. Stop and report on conflict.
-
-### merge-pr (GitHub PRs)
-By number/branch → merge that PR. "current" or no arg → merge PR for current branch. "all" → merge all open PRs. Default `--merge`; honor `--squash` or `--rebase` if asked.
+### merge
+No target given → show available branches and open PRs, ask user what to merge.
+PR (number or "#N") → `gh pr merge`; "all PRs" → merge all open PRs.
+Branch name → merge into current; "into main" → checkout main first; "all" → merge all feature branches into main.
+Stop on conflict — report files, do not resolve.
 
 ### sync
 Read-only — run in parallel: `git status -sb`, ahead/behind main, is main itself stale, stash list. Report status and suggested fix. No changes.
