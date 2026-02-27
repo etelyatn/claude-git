@@ -14,9 +14,7 @@ Detect intent from natural language and dispatch a **haiku** sub-agent. Never ru
 | Commit | "commit this", "save my work", "just commit" | commit |
 | Push | "push it", "push my changes", "just push" | push |
 | Commit + push | "commit and push", "save and push" | commit+push |
-| Open PR | "open a PR", "create a PR", "make a PR" | pr |
-| Push + PR | "push and open a PR", "push then PR" | push+pr |
-| Commit + push + PR | "full PR", "commit push and PR", "ship it" | commit+push+pr |
+| PR (any stage) | "open a PR", "make a PR", "push and PR", "ship it", "full PR" | commit+push+pr |
 | Merge branches | "merge into main", "merge all branches", "merge feature-x" | merge |
 | Merge PRs | "merge the PR", "merge PR #42", "merge all open PRs" | merge-pr |
 | Sync | "are we up to date?", "check sync", "what's new on main" | sync |
@@ -52,14 +50,8 @@ Push current branch; `-u origin <branch>` if no upstream.
 ### commit+push
 Commit then push.
 
-### pr
-Check for existing PR — if found, report URL and stop. If unpushed commits exist, report and stop. Otherwise create PR: title <70 chars, body with summary + test plan.
-
-### push+pr
-Push, then create PR as above.
-
 ### commit+push+pr
-Commit, push, then create PR. Branch off main if currently on main.
+Smart PR: check for existing PR first — if found, report URL and stop. Then commit if there are uncommitted changes, push if there are unpushed commits, open PR. Branch off main if currently on main.
 
 ### merge (branches)
 Specific branch → merge into current. "into main" → checkout main first. "all" → merge each feature branch into main one by one. Stop and report on conflict.
